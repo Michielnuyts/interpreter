@@ -8,6 +8,14 @@ pub enum Token {
 
 	Assign,
 	Plus,
+	Minus,
+	Bang,
+	Asterisk,
+	Slash,
+
+	LT,
+	GT,
+
 	Comma,
 	Semicolon,
 	Lparen,
@@ -16,5 +24,8 @@ pub enum Token {
 	Rbrace,
 	Function,
 	Let,
-	Unknown,
+	Boolean(bool),
+	If,
+	Else,
+	Return,
 }
