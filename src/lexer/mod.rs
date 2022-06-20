@@ -23,7 +23,22 @@ impl<'a> Lexer<'a> {
 		self.skip_whitespace();
 
 		let tok = match self.ch {
-			b'=' => Token::Assign,
+			b'=' => {
+				if self.peek_char() == b'=' {
+					self.read_char();
+					Token::Equal
+				} else {
+					Token::Assign
+				}
+			}
+			b'!' => {
+				if self.peek_char() == b'=' {
+					self.read_char();
+					Token::NotEqual
+				} else {
+					Token::Bang
+				}
+			}
 			b';' => Token::Semicolon,
 			b'(' => Token::Lparen,
 			b')' => Token::Rparen,
@@ -34,9 +49,8 @@ impl<'a> Lexer<'a> {
 			b'/' => Token::Slash,
 			b'{' => Token::Lbrace,
 			b'}' => Token::Rbrace,
-			b'!' => Token::Bang,
-			b'<' => Token::LT,
-			b'>' => Token::GT,
+			b'<' => Token::LargerThan,
+			b'>' => Token::GreaterThan,
 			b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
 				return self.read_identifier();
 			}
@@ -56,11 +70,17 @@ impl<'a> Lexer<'a> {
 			self.ch = 0;
 		} else {
 			self.ch = self.input.as_bytes()[self.read_position];
-			println!("next char: {} at position {}", self.ch, self.read_position);
 		}
 
 		self.position = self.read_position;
 		self.read_position += 1;
+	}
+	pub fn peek_char(&self) -> u8 {
+		if self.read_position >= self.input.len() {
+			0
+		} else {
+			self.input.as_bytes()[self.read_position]
+		}
 	}
 	pub fn skip_whitespace(&mut self) {
 		while let b' ' | b'\t' | b'\n' | b'\r' = self.ch {
@@ -95,9 +115,6 @@ impl<'a> Lexer<'a> {
 		}
 
 		let literal = &self.input[start_position..self.position];
-		println!("consumed number {}", literal);
-		println!("from pos {} to {}", start_position, self.position);
-		println!("self.ch is now {}", self.ch);
 
 		Token::Int(literal.parse::<i64>().unwrap())
 	}
@@ -105,31 +122,6 @@ impl<'a> Lexer<'a> {
 
 #[test]
 fn test_next_token() {
-	let input = "=+(){},;";
-
-	let tests = [
-		Token::Assign,
-		Token::Plus,
-		Token::Lparen,
-		Token::Rparen,
-		Token::Lbrace,
-		Token::Rbrace,
-		Token::Comma,
-		Token::Semicolon,
-		Token::Eof,
-	];
-
-	let mut l = Lexer::new(input);
-
-	for ct in tests {
-		let token = l.next_token();
-
-		assert_eq!(token, ct);
-	}
-}
-
-#[test]
-fn test_next_token_expanded() {
 	let input = r#"
 	let five = 5;
 	let ten = 10;
@@ -147,6 +139,9 @@ fn test_next_token_expanded() {
 	} else {
 		return false;
 	}
+
+	10 == 10;
+	10 != 9;
 	"#;
 
 	let tests = [
@@ -201,15 +196,15 @@ fn test_next_token_expanded() {
 		Token::Semicolon,
 		// line 8
 		Token::Int(5),
-		Token::LT,
+		Token::LargerThan,
 		Token::Int(10),
-		Token::GT,
+		Token::GreaterThan,
 		Token::Int(5),
 		Token::Semicolon,
 		Token::If,
 		Token::Lparen,
 		Token::Int(5),
-		Token::LT,
+		Token::LargerThan,
 		Token::Int(10),
 		Token::Rparen,
 		Token::Lbrace,
@@ -223,6 +218,14 @@ fn test_next_token_expanded() {
 		Token::Boolean(false),
 		Token::Semicolon,
 		Token::Rbrace,
+		Token::Int(10),
+		Token::Equal,
+		Token::Int(10),
+		Token::Semicolon,
+		Token::Int(10),
+		Token::NotEqual,
+		Token::Int(9),
+		Token::Semicolon,
 		Token::Eof,
 	];
 

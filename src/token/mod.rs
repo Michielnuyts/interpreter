@@ -13,8 +13,10 @@ pub enum Token {
 	Asterisk,
 	Slash,
 
-	LT,
-	GT,
+	LargerThan,
+	GreaterThan,
+	Equal,
+	NotEqual,
 
 	Comma,
 	Semicolon,
