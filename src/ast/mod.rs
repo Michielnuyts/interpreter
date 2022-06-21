@@ -1,11 +1,11 @@
 pub trait Node {
-	fn token_literal() -> String;
+	fn token_literal(&self);
 }
 
-pub trait Statement {
-	fn statement_node();
-}
+pub trait Statement: Node {}
 
-pub trait Expression {
-	fn expression_node();
+pub trait Expression: Node {}
+
+pub struct Program {
+	pub statements: Vec<Box<dyn Statement>>,
 }
